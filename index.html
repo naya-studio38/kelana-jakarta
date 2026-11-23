@@ -1448,6 +1448,14 @@ const count=o=>Object.keys(o).length;
 /* ---------- world logic ---------- */
 const npcAt=(x,y)=>npcs.find(n=>n.x===x&&n.y===y);
 const blocked=(x,y)=>x<0||y<0||x>=MW||y>=MH||SOLID.has(map[y][x])||!!npcAt(x,y)||vehAt(x,y)||(player.x===x&&player.y===y);
+/* the lead monster walks one tile behind the player (snaps back after doors, travel and other jumps) */
+const FOL={x:0,y:0,fx:0,fy:0,lx:-99,ly:-99,prog:16,moving:false,dir:'down'};
+function folUpdate(){if(!party.length||!party[0]||scene!=='world')return null;const P=player;
+  if(P.x!==FOL.lx||P.y!==FOL.ly){const jump=Math.abs(P.x-FOL.lx)+Math.abs(P.y-FOL.ly)!==1||Math.abs(FOL.x-P.fx)+Math.abs(FOL.y-P.fy)>1;
+    if(jump){const[dx,dy]=DV[P.dir]||[0,1],bx=P.x-dx,by=P.y-dy,ok=!blocked(bx,by);FOL.x=FOL.fx=ok?bx:P.x;FOL.y=FOL.fy=ok?by:P.y;FOL.dir=P.dir}
+    else{FOL.fx=FOL.x;FOL.fy=FOL.y;FOL.x=P.fx;FOL.y=P.fy;const ddx=FOL.x-FOL.fx,ddy=FOL.y-FOL.fy;if(ddx||ddy)FOL.dir=ddx>0?'right':ddx<0?'left':ddy<0?'up':'down'}
+    FOL.lx=P.x;FOL.ly=P.y}
+  FOL.moving=P.moving&&(FOL.x!==FOL.fx||FOL.y!==FOL.fy);FOL.prog=P.moving?P.prog:16;if(FOL.x===P.x&&FOL.y===P.y)return null;return FOL}
 const rpos=e=>[(e.fx+(e.x-e.fx)*(e.moving?e.prog/16:1))*TS,(e.fy+(e.y-e.fy)*(e.moving?e.prog/16:1))*TS];
 let bumpT=0;
 function tryStep(d){
@@ -1513,13 +1521,13 @@ function tileAction(x,y){const t=(map[y]||[])[x];{const lg=legendAt(x,y);if(lg)r
   return null}
 
 /* ---------- scripts ---------- */
-const GOAL=8;
+const GOAL=4;
 async function giveStamp(id,label){if(stamps[id])return;stamps[id]=true;sfx('stamp');await say(`KAMU MENDAPAT STEMPEL ${label}!`);saveGame()}
 /* the green board in front of Monas gives the Monas stamp */
 async function monasSign(){await say('PAPAN HIJAU: MONUMEN NASIONAL (MONAS). DIBANGUN UNTUK MENGENANG PERJUANGAN KEMERDEKAAN INDONESIA.');await say('DI PUNCAKNYA ADA LIDAH API YANG DILAPISI EMAS ASLI. DARI PELATARAN PUNCAK, KAMU BISA MELIHAT JAKARTA DARI ATAS.');await giveStamp('monas','MONAS')}
 async function inspectMonas(){await say('INI MONAS, SINGKATAN DARI MONUMEN NASIONAL. TINGGINYA 132 METER, KIRA-KIRA SETINGGI GEDUNG 30 LANTAI!');if(!stamps.monas)await say('DI DEPAN MONAS ADA PAPAN HIJAU. BACA PAPANNYA UNTUK MENDAPAT STEMPEL MONAS!');
   if(flags['beat_'+BOSS[1]]&&!caught.banaspati&&!isNight())await say('PUNCAK EMAS MONAS TAMPAK BERKEDIP. KATANYA ADA YANG TURUN DARI SANA KALAU MALAM TIBA.');else if(flags['beat_'+BOSS[1]]&&!caught.banaspati&&party.some(c=>c.hp>0)){await say('PUNCAK EMAS MONAS BERKILAU... ADA YANG TURUN PELAN-PELAN!');await say('MONSTER LEGENDARIS BANASPATI MUNCUL! HANYA DI SINI KAMU BISA BERTEMU DENGANNYA.');await startBattle([mon('banaspati',12)],null)}}
-async function homeRest(){await say('RUMAH KAMU. ISTIRAHAT SEBENTAR...');if(party.length){await restFx();setClock(6);await say('TIM KAMU PULIH SEPENUHNYA!')}}
+async function homeRest(){await say('RUMAH KAMU. ISTIRAHAT SEBENTAR...');if(party.length){await restFx();restClock();await say('KAMU TIDUR 4 JAM. SEKARANG JAM '+clockText()+'. TIM KAMU PULIH SEPENUHNYA!')}}
 const PRICE={rantang:100,jamu:150,kopi:200},rp=n=>'RP'+n;
 function qtyPick(name,price,max,have){return new Promise(res=>{let n=1;const R=228,row=(k,v,y)=>{txt(k,124,y,2);txt(v,R-textW(v),y)};
   const wd={tap(tx,ty){if(tx<116||tx>=236||ty<30||ty>=110)return;if(ty>=84)wd.input(tx<176?'a':'b');else if(ty>=44)wd.input(ty<65?'up':'down')},draw(){box(116,30,120,80);txt(name,124,37);row('PUNYA','X'+have,50);row('JUMLAH',String(n),62);{const ax=R-textW(String(n))-10;fillR(3,ax+2,61,1,1);fillR(3,ax+1,62,3,1);fillR(3,ax,63,5,1);arrowDown(ax,66)}row('TOTAL',rp(n*price),74);fillR(2,124,86,104,1);txt('A: BELI  B: BATAL',124,93,2)},
@@ -1893,7 +1901,9 @@ async function panduan(){for(const s of['PANDUAN 1 DARI 5: JALAN DENGAN TOMBOL A
   'PANDUAN 3 DARI 5: TIAP MONSTER PUNYA ELEMEN. ADA ELEMEN YANG KUAT DAN ADA YANG LEMAH TERHADAP ELEMEN LAIN. BU GURU DI TAMAN BISA MENJELASKANNYA.',
   'PANDUAN 4 DARI 5: DI TIAP DISTRIK, KUMPULKAN TIGA STEMPEL DAN TANGKAP MONSTER KHASNYA. LALU MASUK KE BANGUNAN UTAMA DISTRIK, KALAHKAN PARA PENJAGA, JAWAB KUIS, DAN LAWAN BOSNYA.',
   'PANDUAN 5 DARI 5: TIM KAMU PULIH DI RUMAH ATAU KLINIK. BELANJA DI KOPDES. BUKA MENU UNTUK MELIHAT MISI, TAS, KODEKS, DAN MENYIMPAN PERMAINAN.'])await say(s)}
-async function toTitle(){if(!(await yesno('KEMBALI KE MENU UTAMA? PROGRES DISIMPAN DULU.')))return false;saveGame();await fadeOut();ui.length=0;scene='title';await fadeIn();title();return true}
+/* no SIMPAN item in the menu any more: saving is offered here, when going back to the title */
+async function toTitle(){const tw=showText('KEMBALI KE MENU UTAMA. SIMPAN PROGRES DULU?');const k=await choose(['SIMPAN','TIDAK SIMPAN','BATAL'],{x:Math.max(140,SCW-UX-110),y:52});popUI(tw);if(k<0||k===2)return false;
+  if(k===0)await say(saveGame()?'PROGRES TERSIMPAN DI PROFIL '+(SLOT+1)+'.':'GAGAL MENYIMPAN. BROWSER INI MENOLAK PENYIMPANAN.');await fadeOut();ui.length=0;scene='title';await fadeIn();title();return true}
 /* people of district 1 know the player by name; elsewhere there is a short introduction the first time */
 const NPCNAME={jali:'BANG JALI',kerak:'ABANG KERAK TELOR',satpam:'PAK SATPAM',jaga1:'PENJAGA',jaga2:'PENJAGA',petugas:'PETUGAS',engkong:'ENGKONG',guru:'BU GURU',bocah:'BOCAH',atik:'MPOK ATIK',bayu:'MAS BAYU',w1a:'KAKAK PELARI',w1b:'IBU',
   pemandu:'PEMANDU',dalang:'PAK DALANG',bocah2:'BOCAH',kokoh:'PAMAN',pemandu3:'PEMANDU',starling:'TUKANG ES',satpam3:'SATPAM',turis:'IBU'};
@@ -1981,8 +1991,8 @@ await say(`PERAWAT: SELAMAT DATANG DI KLINIK ${DIST[d].name}! DI SINI TIM KAMU D
   if(!party.length)return;await legendHint(d);
   if(!(await yesno(`BIAYA PERAWATAN ${rp(p)}. UANGMU ${rp(items.uang||0)}. MAU DIRAWAT?`))){await say('PERAWAT: BAIK. SEMOGA TIMMU SEHAT SELALU!');return}
   if((items.uang||0)<p){await say('PERAWAT: MAAF, UANGNYA BELUM CUKUP. MENANGKAN TANDING DULU, YA.'+(d===1?' DI DISTRIK INI KAMU JUGA BISA ISTIRAHAT GRATIS DI RUMAHMU.':''));return}
-  const tw=showText('PERAWAT: PERAWATANNYA BUTUH WAKTU. MAU MENUNGGU SAMPAI PAGI ATAU SAMPAI MALAM? MONSTER MISTIK HANYA KELUAR MALAM HARI.'),w=await choose(['SAMPAI PAGI','SAMPAI MALAM'],{x:140,y:60,cancel:false});popUI(tw);
-  items.uang-=p;await restFx();setClock(w===1?19:6);await say((w===1?'SELAMAT MALAM!':'SELAMAT PAGI!')+' TIM KAMU SUDAH SEGAR LAGI. SISA UANG: '+rp(items.uang)+'.');saveGame()}
+  await say('PERAWAT: PERAWATANNYA BUTUH WAKTU 4 JAM. TUNGGU SEBENTAR, YA.');
+  items.uang-=p;await restFx();restClock();await say('SUDAH 4 JAM BERLALU, SEKARANG JAM '+clockText()+'. TIM KAMU SUDAH SEGAR LAGI. SISA UANG: '+rp(items.uang)+'.');saveGame()}
 async function talkIjah(){await say('BU IJAH: ADUH, KELIHATANNYA CAPEK HABIS KELILING. MAU ISTIRAHAT? PULANG SAJA KE RUMAHMU DAN TIDUR DI KASUR, GRATIS. MAU BELANJA? KE KOPDES, DI SAMPING KLINIK.');
   if(!flags.ijah){flags.ijah=true;items.jamu+=2;await say('BU IJAH: NIH 2 BOTOL JAMU, GRATIS BUAT WARGA BARU.')}
   if(flags.starter&&ballCount()===0&&(items.uang||0)<PRICE.rantang){items.rantang=2;await say('BU IJAH: BOLA AJAIB HABIS, UANG JUGA HABIS? NIH IBU KASIH 2. SALING MENOLONG ITU BIASA DI KAMPUNG KITA.')}}
@@ -2027,6 +2037,8 @@ const isNight=()=>{const h=clockHour();return h>=18||h<5};
 const dayPhase=()=>{const h=clockHour();return h<5?'MALAM':h<10?'PAGI':h<15?'SIANG':h<18?'SORE':'MALAM'};
 const clockText=()=>{const m=clockMin();return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
 function setClock(h){flags.clk=h*60*CLK_F;flags.phase=dayPhase()}
+/* resting (home or clinic) takes 4 hours: sleep at 08:00, wake at 12:00 */
+function restClock(){if(flags.clk===undefined)flags.clk=420*CLK_F;flags.clk=(flags.clk+240*CLK_F)%(1440*CLK_F);flags.phase=dayPhase()}
 function tickClock(){if(flags.clk===undefined)flags.clk=420*CLK_F;flags.clk=(flags.clk+1)%(1440*CLK_F);const p=dayPhase();
   if(p!==flags.phase){const first=flags.phase===undefined;flags.phase=p;if(!first&&scene==='world'&&!ui.length)banner={text:p==='MALAM'?'MALAM TIBA. MONSTER MISTIK MULAI KELUAR.':p==='PAGI'?'PAGI TIBA. MONSTER MISTIK BERSEMBUNYI.':'SEKARANG '+p+' HARI.',t:190}}}
 /* darkness over the outdoor world: deepest at night, a warm tint at dusk and dawn */
@@ -2779,7 +2791,7 @@ function svcSprites(){
     for(const[y0,o]of[[3,0],[13,2],[23,4],[33,1]]){r('#8a90a3',1,y0-1,30,1);r('#5d6a85',2,y0,28,8);for(let i=0;i<9;i++)r(bk[(i+o)%6],3+i*3,y0+1+(i%2),2,7-(i%2))}r('#8a90a3',1,42,30,1)})}
 /* in battle the opponent stands at the top right and must look towards the player's monster at the bottom left.
    These species were drawn looking right, so their front picture is mirrored when they are the opponent */
-const FACER=new Set('merpatu tikuro kunangi kunangla semuti belali bondoli ayamo kambingo kambingar cendri anoaki jalaki babiro gilingi pesuti rangko arwanaga beluti bango kasuo kasuar cabeo tawoni ajagi kudai meraki merakar kupui kuskusi tapiro nuriki keongi kurako kumbango rajawi rajawar waleti camari camara kutili torani gelati undani drako cekakak sriganti lebahi lebahar kepodi kepodang tupayi jangkri landaki bebeki bebekar gereji angsai puyuhi tekuki cemano guramo'.split(' '));
+const FACER=new Set('busoko merpatu tikuro kunangi kunangla semuti belali bondoli ayamo kambingo kambingar cendri anoaki jalaki babiro gilingi pesuti rangko arwanaga beluti bango kasuo kasuar cabeo tawoni ajagi kudai meraki merakar kupui kuskusi tapiro nuriki keongi kurako kumbango rajawi rajawar waleti camari camara kutili torani gelati undani drako cekakak sriganti lebahi lebahar kepodi kepodang tupayi jangkri landaki bebeki bebekar gereji angsai puyuhi tekuki cemano guramo'.split(' '));
 function drawSprE(sp,x,y,s,clipY){if(!FACER.has(sp)){drawSpr(sp,x,y,s,clipY);return}g.save();if(clipY!=null){g.beginPath();g.rect(-UX,-UY,SCW,clipY+UY);g.clip()}
   g.translate(Math.round(x)+16*s,Math.round(y));g.scale(-1,1);g.drawImage(SPRH[sp],0,0,16*s,16*s);g.restore()}
 /* generated by sprite-ai/hero/mk.js: high-resolution front views (720 px tall) of the two protagonists for the opening */
@@ -3015,7 +3027,7 @@ async function wildBattle(z){const E=ENC[z];let sp=rollWild(E);
 function partyScreen(o={}){return new Promise(res=>{let i=Math.max(0,Math.min(party.length-1,o.start||0)),top=Math.max(0,Math.min(i,party.length-6));
   const wd={busy:false,tap(tx,ty){if(wd.busy)return;if(ty>=136){wd.input('b');return}const k=top+Math.floor((ty-3)/22);if(ty>=3&&k<party.length){i=k;wd.input('a')}},draw(){fillR(0,0,0,W,H);
       for(let k=0;k<6;k++){const c=party[top+k];if(!c)break;const y=4+k*22;if(top+k===i){fillR(3,3,y-1,234,22);fillR(1,4,y,232,20)}if(o.mark===top+k){g.fillStyle='#f2a23a';g.fillRect(2,y-1,3,22);g.fillRect(235,y-1,3,22);txt('PINDAH',196,y+12,3)}
-        drawSpr(c.sp,8,y+2);txt(nm(c),28,y+3);txt('LV'+c.lv,28,y+12);hpBar(110,y+4,64,c.hp,maxHP(c));txt(`${c.hp}/${maxHP(c)}`,110,y+12);txt(SPECIES[c.sp].type,184,y+3,2);if(c.hp<=0)txt('TUMBANG',184,y+12)}
+        drawSpr(c.sp,8,y+2);txt(nm(c),28,y+3);txt('LV'+c.lv,28,y+12);if(top+k===0){const w=textW('UTAMA')+6;g.fillStyle='#e0a32e';g.fillRect(64,y+10,w,11);txt('UTAMA',67,y+12,3)}hpBar(110,y+4,64,c.hp,maxHP(c));txt(`${c.hp}/${maxHP(c)}`,110,y+12);txt(SPECIES[c.sp].type,184,y+3,2);if(c.hp<=0)txt('TUMBANG',184,y+12)}
       box(0,136,240,24);txt(o.title||'PILIH MONSTER.',8,144);const n=`${i+1}/${party.length}`;txt(n,232-textW(n),144,2)},
     input(k){if(wd.busy)return;const n=party.length;
       if(k==='up'){i=(i-1+n)%n;sfx('blip')}else if(k==='down'){i=(i+1)%n;sfx('blip')}else if(k==='left'){i=Math.max(0,i-6);sfx('blip')}else if(k==='right'){i=Math.min(n-1,i+6);sfx('blip')}
@@ -3088,7 +3100,7 @@ function misiList1(){const tr=['ucup','sari'].filter(k=>flags['beat_'+k]).length
   [!!stamps.gambir,'STEMPEL STASIUN GAMBIR','PERIKSA PAPAN HIJAU DI DEPAN STASIUN. KELUAR GERBANG TIMUR TAMAN, NYEBRANG, PAPANNYA DI KANAN BAWAH ZEBRA CROSS.'],
   [cg>=GOAL,`TANGKAP ${GOAL} JENIS (${Math.min(cg,GOAL)}/${GOAL})`,'TIAP POJOK SEMAK DAN PINGGIR KALI PUNYA PENGHUNI BERBEDA. LEMAHKAN DULU, BARU LEMPAR BOLA AJAIB.'],
   [tr>=2,`KALAHKAN 2 PENANTANG (${tr}/2)`,'UCUP DAN MBAK SARI ADA DI DALAM TAMAN. MEREKA BARU MAU TANDING KALAU KAMU PUNYA 3 MONSTER DAN 2 DI ANTARANYA SUDAH LEVEL 6.'],
-  [!!flags['beat_'+BOSS[1]],'KALAHKAN BOS: PAK DARMO','BOS DISTRIK JAGA PINTU STASIUN GAMBIR. SYARAT NANTANG: TIGA STEMPEL DAN DELAPAN JENIS. PULIHKAN TIM DULU.'],
+  [!!flags['beat_'+BOSS[1]],'KALAHKAN BOS: PAK DARMO','BOS DISTRIK JAGA PINTU STASIUN GAMBIR. SYARAT NANTANG: TIGA STEMPEL DAN EMPAT JENIS. PULIHKAN TIM DULU.'],
   [!!caught.banaspati,'??? DI PUNCAK MONAS','SETELAH BOS DISTRIK KALAH, PERIKSA MONAS SEKALI LAGI. SIAPKAN BOLA AJAIB YANG BANYAK.']]}
 function misiScreen(){const L=misiList(),next=L.find(l=>!l[0]);
   return infoScreen(()=>{fillR(0,0,0,W,H);txt('MISI DISTRIK '+curDist(),8,6);const d=`${L.filter(l=>l[0]).length}/${L.length}`;txt(d,W-8-textW(d),6);
@@ -3102,18 +3114,17 @@ async function demoEnd(d=1){await fadeOut();const t=Math.floor((flags.time||0)/6
     box(0,128,240,32);txt(d<8?'BERIKUTNYA: DISTRIK '+(d+1)+', '+DIST[d+1].name+'.':'KABAR DARURAT DARI ISTANA DI MONAS!',8,135);txt('A: LANJUT JELAJAH',8,147,2)});
   sfx('level');await fadeIn();await p}
 async function openMenu(){sfx('blip');
-  while(true){const i=await choose(['TIM','TAS','MISI','KODEKS','STEMPEL','SIMPAN','PANDUAN','PETA','MENU UTAMA'],{x:152,y:2,start:Math.min(menuIdx,8),preview:()=>{box(4,4,96,15);txt('UANG RP'+(items.uang||0),10,8)}});/* no TUTUP item any more: B closes the menu; MENU UTAMA is last */
-    if(i<0)return;menuIdx=i;if(i===7){await petaKota();continue}if(i===6){await panduan();continue}if(i===8){if(await toTitle())return;continue}
+  while(true){const i=await choose(['TIM','TAS','MISI','KODEKS','STEMPEL','PANDUAN','PETA','MENU UTAMA'],{x:152,y:2,start:Math.min(menuIdx,7),preview:()=>{box(4,4,96,15);txt('UANG RP'+(items.uang||0),10,8)}});/* no TUTUP item any more: B closes the menu; MENU UTAMA is last */
+    if(i<0)return;menuIdx=i;if(i===6){await petaKota();continue}if(i===5){await panduan();continue}if(i===7){if(await toTitle())return;continue}
     if(i===0){if(!party.length){await say('KAMU BELUM PUNYA MONSTER.');continue}
-      await partyScreen({title:'A: PILIHAN   B: KEMBALI',onPick:async k=>{const c=party[k];const j=await choose(['INFO','TUKAR POSISI','JADI PERTAMA','KEMBALI'],{x:138,y:64});
+      await partyScreen({title:'A: PILIHAN   B: KEMBALI',onPick:async k=>{const c=party[k];const j=await choose(['INFO','TUKAR POSISI','KEMBALI'],{x:138,y:64});
         if(j===0){const S=SPECIES[c.sp];await say(`${S.name} LV${c.lv}, ELEMEN ${S.type}. SERANG ${stat(c,'atk')}, TAHAN ${stat(c,'def')}, LARI ${stat(c,'spd')}. JURUS: ${c.moves.map(m=>MOVES[m].name).join(', ')}.`);
           await say(S.desc+(S.evo?` BEREVOLUSI DI LV ${S.evoLv}.`:''))}
-        if(j===1){if(party.length<2)await say('TIM KAMU BARU SATU MONSTER.');else await swapPick(k)}if(j===2&&k>0){party.splice(k,1);party.unshift(c);sfx('blip')}return false}})}
+        if(j===1){if(party.length<2)await say('TIM KAMU BARU SATU MONSTER.');else await swapPick(k)}return false}})}
     else if(i===1)await bagMenu(false);
     else if(i===2)await misiScreen();
     else if(i===3)await kodeksScreen();
     else if(i===4)await stampScreen();
-    else if(i===5)await say(saveGame()?'PROGRES TERSIMPAN DI PROFIL '+(SLOT+1)+'.':'GAGAL MENYIMPAN. BROWSER INI MENOLAK PENYIMPANAN.');
   }}
 
 /* ---------- battle ---------- */
@@ -3570,8 +3581,9 @@ function drawWorldScene(){const[px,py]=rpos(player);
   const ylo=RM?RM.y0*TS:DD.y0*TS,yhi=RM?(RM.y0+(RM.h||8))*TS+16:DD.y1*TS+15;
   for(let si=stStart(top);si<STATIC.length;si++){const o=STATIC[si];if(o.y>bot)break;if(o.y<ylo||o.y>yhi)continue;if(o.vis&&!o.vis())continue;if(Math.abs(o.x-cx)<VIEW_HALF+150)list.push(o)}
   for(const n of npcs){const[ex,ey]=rpos(n);if(ey+15<ylo||ey+15>yhi)continue;list.push({x:ex+8,y:ey+15,e:n,key:n.sty})}
-  list.push({x:px+8,y:py+15,e:player,key:'player'});trafficDraw(list,cx,top,bot);list.sort((a,b)=>a.y-b.y);
+  list.push({x:px+8,y:py+15,e:player,key:'player'});{const f=folUpdate();if(f){const[fx,fy]=rpos(f);if(fy+15>=ylo&&fy+15<=yhi)list.push({x:fx+8,y:fy+15-.5,fol:f})}}trafficDraw(list,cx,top,bot);list.sort((a,b)=>a.y-b.y);
   for(const o of list){if(o.box){drawBox(o.box);ctx=g;continue}if(o.d3){o.d3();ctx=g;continue}const p=proj(o.x,o.y,cx,base),sx=Math.round(p[0]),sy=Math.round(p[1]);
+    if(o.fol){const f=o.fol,c=party[0];if(c){const im=(f.dir==='up'?SPRB:SPR)[c.sp];if(im){const hop=f.moving&&(f.prog&7)<4?1:0;footShadow(sx,sy);g.save();if(f.dir==='right'){g.translate(sx,0);g.scale(-1,1);g.translate(-sx,0)}g.drawImage(im,sx-8,sy-16-hop,16,16);g.restore()}}continue}
     if(o.e){const c=personSprite(o.e,o.key),bob=walkFrame(o.e)?1:0,dx=sx-9,dy=sy-27-bob;footShadow(sx,sy);g.drawImage(c,dx,dy,19,28);
       if(map[o.e.y][o.e.x]===','&&(!o.e.moving||o.e.prog>6))g.drawImage(SP.tuft.c,sx-13,sy-7);
       if(o.e.bubble){box(dx+5,dy-8,11,13);txt('!',dx+8,dy-5)}continue}
@@ -3804,7 +3816,7 @@ function misiTab(){if(ui.length||scene!=='world')return;misiNote();const L=misiL
 /* ================= districts: Gambir with rails and a train, districts 2 and 3, creatures per district ================= */
 const D2Y=60,L2=52,L3=64,D3Y=D2Y+L2;
 const DIST={
-  1:{name:'MONAS',y0:0,y1:OH,goal:8,stamps:[['monas','MONAS'],['istana','ISTANA'],['gambir','GAMBIR']],heal:[15,38],healer:'WARUNG BU IJAH',arrive:[49,14]},
+  1:{name:'MONAS',y0:0,y1:OH,goal:4,stamps:[['monas','MONAS'],['istana','ISTANA'],['gambir','GAMBIR']],heal:[15,38],healer:'WARUNG BU IJAH',arrive:[49,14]},
   2:{name:'KOTA TUA',y0:D2Y,y1:D3Y,goal:4,fam:['lantern','wayang','keris','ondel','kerak','eskrim'],stamps:[['fatahillah','MUSEUM'],['intan','JEMBATAN'],['tokomerah','TOKO MERAH']],heal:[43,D2Y+20],healer:'KOPDES KOTA TUA',arrive:[49,D2Y+12],
     enc:(x,y)=>y>=40?(x<28?'k2e':'k2f'):x<=7?'k2c':x<=15?'k2k':y<=9?'k2a':x<40?'k2d':'k2b',
     zone:(x,y)=>y>=40?'GLODOK':x<8?'TEPI BARAT KALI BESAR':x<=15?'KALI BESAR':x>=47?'STASIUN JAKARTA KOTA':(x>=16&&x<=39&&y>=10&&y<=26)?'TAMAN FATAHILLAH':'KOTA TUA'},
@@ -4282,7 +4294,7 @@ function drawBattle(){ctx=g;const kali=B.zone==='kali';if(B.shake)g.translate(B.
   battleBg(B.zone,curDist());
   const E=en(),A=al();
   if(B.showE&&!B.hideE&&!B.blinkE)drawSprE(E.sp,144+B.slideE+B.lungeE,2+B.sinkE,4,67);
-  if(B.showA&&!B.blinkA&&A)drawSpr(A.sp,32+B.slideA+B.lungeA,46+B.sinkA,4,111,false,true);
+  if(B.showA&&!B.blinkA&&A)drawSpr(A.sp,25.6+B.slideA+B.lungeA,39.6+B.sinkA,4.8,111,false,true);
   battleFg(B.zone);if(B.rantang)drawRantang(B.rantang.x+B.rantang.sh,B.rantang.y);if(B.use)useFx(64,80,B.use.t,B.use.kind);if(B.useE)useFx(176,36,B.useE.t,B.useE.kind);if(B.fx){drawFx();ctx=g}
   if(B.showE&&B.slideE===0){box(6,6,112,32);txt(nm(E),12,12);if(E.rare){const sx=16+textW(nm(E)),f=(frame>>3)&1;g.fillStyle=f?'#e0a32e':'#c98a2b';g.fillRect(sx+2,11,1,7);g.fillRect(sx-1,14,7,1);g.fillRect(sx+1,13,3,3)}txt('LV'+E.lv,112-textW('LV'+E.lv)-4,12);txt('HP',12,24);hpBar(26,25,80,E.hpShown??E.hp,maxHP(E));typeBadge(10,35,SPECIES[E.sp].type)}
   if(B.showA&&B.slideA===0&&A){box(124,68,114,44);txt(nm(A),130,74);typeBadge(128,60,SPECIES[A.sp].type);txt('LV'+A.lv,232-textW('LV'+A.lv)-4,74);txt('HP',130,84);hpBar(144,85,82,A.hpShown??A.hp,maxHP(A));

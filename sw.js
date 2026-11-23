@@ -1,6 +1,6 @@
 // Kelana Jakarta service worker: simpan berkas game supaya jalan offline.
 // Ganti VERSION setiap kali index.html diperbarui, supaya HP mengambil versi baru.
-const VERSION = 'kelana-v90-202611240023';
+const VERSION = 'kelana-v91-202611240039';
 const CORE = ['./', './index.html', './manifest.webmanifest',
   './apple-touch-icon.png', './icon-192.png', './icon-512.png'];
 
