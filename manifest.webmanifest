@@ -1,0 +1,17 @@
+{
+  "name": "Kelana Jakarta",
+  "short_name": "Kelana Jakarta",
+  "description": "Jelajahi Jakarta, kumpulkan stempel, dan berteman dengan monster kota.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#16121b",
+  "theme_color": "#16121b",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
