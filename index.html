@@ -2786,13 +2786,13 @@ function applyHero(){heroStyles();const k=STYLES[flags.hero]?flags.hero:'heroA';
 let HSTG=null,HSEL=-1,HSTG_ON=false;
 function heroStage(on,sel){if(!on){if(HSTG)HSTG.style.display='none';return}
   if(!HSTG){const d=HSTG=document.createElement('div');d.style.cssText='position:absolute;z-index:0;pointer-events:none;background:#1b1d33;overflow:hidden;display:none';
-    HEROES.forEach((h,k)=>{const im=HIMG[h];im.alt='';im.style.cssText='position:absolute;bottom:33%;height:62%;width:auto;left:'+(k?40:22)+'%;transition:opacity .2s,transform .2s,left .25s,bottom .25s;transform-origin:50% 100%;image-rendering:auto';d.appendChild(im)});
+    HEROES.forEach((h,k)=>{const im=HIMG[h];im.alt='';im.style.cssText='position:absolute;bottom:33%;height:62%;width:auto;left:'+(k?54:38)+'%;transition:opacity .2s,transform .2s,left .25s,bottom .25s;transform-origin:50% 100%;image-rendering:auto';d.appendChild(im)});
     cv.parentNode.style.position='relative';cv.style.position='relative';cv.style.zIndex=1;cv.parentNode.insertBefore(d,cv)}
   const st=HSTG.style;st.left=(cv.offsetLeft+cv.clientLeft)+'px';st.top=(cv.offsetTop+cv.clientTop)+'px';st.width=cv.clientWidth+'px';st.height=cv.clientHeight+'px';st.display='block';
-  HEROES.forEach((h,k)=>{const q=HIMG[h].style,front=sel<0||k===sel;if(sel<0){q.left=(k?40:22)+'%';q.bottom='33%';q.zIndex=1;q.opacity='1';q.transform='translateX(-50%) scale(1)';return}
-    q.left=front?'29%':'41%';q.bottom=front?'31%':'38%';q.zIndex=front?2:1;q.opacity=front?'1':'.45';q.transform='translateX(-50%) scale('+(front?1.06:.84)+')'})}
+  HEROES.forEach((h,k)=>{const q=HIMG[h].style,front=sel<0||k===sel;if(sel<0){q.left=(k?54:38)+'%';q.bottom='33%';q.zIndex=1;q.opacity='1';q.transform='translateX(-50%) scale(1)';return}
+    q.left=front?'42%':'54%';q.bottom=front?'31%':'38%';q.zIndex=front?2:1;q.opacity=front?'1':'.45';q.transform='translateX(-50%) scale('+(front?1.06:.84)+')'})}
 async function heroPick(){heroStyles();HSEL=-1;await say('SEBELUM PETUALANGANMU DIMULAI, CERITAKAN DULU TENTANG DIRIMU.');
-  const tw=showText('KAMU ANAK LAKI-LAKI ATAU PEREMPUAN?');HSEL=0;const i=await choose(['LAKI-LAKI','PEREMPUAN'],{x:150,y:60,cancel:false,preview:k=>{HSEL=k}});popUI(tw);
+  const tw=showText('KAMU ANAK LAKI-LAKI ATAU PEREMPUAN?');HSEL=0;const i=await choose(['LAKI-LAKI','PEREMPUAN'],{x:Math.max(150,SCW-UX-100),y:60,cancel:false,preview:k=>{HSEL=k}});popUI(tw);
   HSEL=i;flags.hero=HEROES[i];flags.gender=i?'P':'L';applyHero();sfx('level');await say(i?'JADI KAMU ANAK PEREMPUAN. SALAM KENAL!':'JADI KAMU ANAK LAKI-LAKI. SALAM KENAL!')}
 /* everything before the first morning happens on a dark screen; the world fades in afterwards */
 async function prolog(){scene='intro';const bg=pushUI({draw(){if(HSTG_ON){heroStage(true,HSEL);g.save();g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,SCW,SCH);g.restore()}else{g.fillStyle='#1b1d33';g.fillRect(-UX,-UY,SCW,SCH)}},input(){}});ovA=0;
@@ -4342,6 +4342,13 @@ if(matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch');
   dp.addEventListener('contextmenu',e=>e.preventDefault())})();
 addEventListener('orientationchange',()=>setTimeout(fit,200));
 addEventListener('resize',fit);
+/* iPhone home-screen launch (and some Android WebViews) report a stale screen size for a moment and send no resize event:
+   measure again when the size settles, when the app comes back, and on the first tap */
+{const refit=()=>{fit();setTimeout(fit,150)};if(window.visualViewport)visualViewport.addEventListener('resize',refit);
+  addEventListener('pageshow',refit);addEventListener('focus',refit);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refit()});
+  try{screen.orientation.addEventListener('change',()=>setTimeout(fit,200))}catch(_){}
+  for(const ms of[80,300,700,1500,3000])setTimeout(fit,ms);
+  const first=()=>{removeEventListener('pointerdown',first,true);try{scrollTo(0,0)}catch(_){}refit()};addEventListener('pointerdown',first,true)}
 document.getElementById('muteBtn').addEventListener('click',e=>{muted=!muted;e.currentTarget.classList.toggle('muted',muted);e.currentTarget.setAttribute('aria-label','Suara '+(muted?'mati':'nyala'));cv.focus()});
 document.getElementById('padBtn').addEventListener('click',()=>{document.body.classList.toggle('touch');fit();cv.focus()});
 if(new URLSearchParams(location.search).has('touch'))document.body.classList.add('touch');
