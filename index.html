@@ -373,6 +373,16 @@ function ondel(x,y,male,f){
   r(P.ol,x+3,y+22,12,3);r(P.au1,x+4,y+23,10,1);
   for(let k=0;k<12;k++)r(P.au2,cx-6+k,y+26+Math.round(k*.8),2,1);
   r(P.ol,x-1,y+25,4,12);r(robe,x,y+26,2,10);r(P.ol,x+15,y+25,4,12);r(robe2,x+16,y+26,2,10);r(face,x,y+36,2,1);r(face,x+16,y+36,2,1)}
+/* compact kerak telor pikulan (about 2 tiles): clay stove with wok on the left, glass box of eggs on the right, bamboo pole on top */
+function kerakCart(x,y){shadowEll(x+15,y+23,15,2);
+  r(P.ol,x+1,y+2,28,3);r(P.wood1,x+2,y+3,26,1);r(P.ol,x+4,y+4,1,5);r(P.ol,x+10,y+4,1,5);r(P.ol,x+19,y+4,1,6);r(P.ol,x+26,y+4,1,6);
+  r(P.ol,x+1,y+9,12,14);r(P.clay1,x+2,y+10,10,12);r(P.clay3,x+2,y+10,10,1);r(P.clay2,x+9,y+10,3,12);
+  r(P.ol,x+4,y+15,6,5);r(P.au3,x+5,y+16,4,3);r(P.au1,x+6,y+17,2,1);r('#ff7a3d',x+5,y+18,1,1);
+  r(P.ol,x,y+8,14,2);r('#3b3f4c',x+1,y+8,12,1);r(P.au2,x+3,y+7,8,1);r(P.au1,x+5,y+7,3,1);
+  r(P.ol,x+17,y+10,12,13);r(P.wood1,x+18,y+11,10,11);r('#c98a55',x+18,y+11,10,1);r(P.wood2,x+25,y+11,3,11);
+  r(P.ol,x+19,y+13,7,5);r(P.glass,x+20,y+14,5,3);r('#fff6e0',x+20,y+15,2,2);r('#fff6e0',x+23,y+15,2,2);r(P.wood2,x+19,y+19,7,2);
+  r(P.ol,x+2,y+22,2,2);r(P.ol,x+10,y+22,2,2);r(P.ol,x+18,y+22,2,2);r(P.ol,x+26,y+22,2,2);
+  circ(x+6,y+4,1,'rgba(255,255,255,.55)');circ(x+8,y+1,1.5,'rgba(255,255,255,.35)')}
 function kerakTelor(x,y,f){shadowEll(x+23,y+29,23,3);
   r(P.ol,x+4,y+2,38,3);r(P.wood1,x+5,y+3,36,1);r(P.ol,x+7,y+4,1,6);r(P.ol,x+37,y+4,1,5);
   r(P.ol,x+1,y+12,15,16);r(P.clay1,x+2,y+13,13,14);r(P.clay3,x+2,y+13,13,1);r(P.clay2,x+11,y+13,4,14);
@@ -1207,7 +1217,7 @@ const put=(list,ch)=>list.forEach(([x,y])=>map[y][x]=ch);
   rect(12,36,6,1,'R');rect(12,37,6,1,'K');rect(12,38,6,1,':');
   rect(22,36,4,1,'R');rect(22,37,4,1,'B');put([[23,37]],'W');put([[24,37]],'D');
   rect(29,36,4,1,'R');rect(29,37,4,1,'B');put([[31,37]],'W');put([[30,37]],'D');
-  rect(1,41,54,2,'~');rect(17,23,3,1,'Q');put([[11,37]],'V');rect(0,8,8,2,'=');rect(48,8,8,2,'=');rect(0,34,8,2,'=');rect(48,34,8,2,'=');rect(36,39,14,2,',');
+  rect(1,41,54,2,'~');rect(17,23,2,1,'Q');put([[11,37]],'V');rect(0,8,8,2,'=');rect(48,8,8,2,'=');rect(0,34,8,2,'=');rect(48,34,8,2,'=');rect(36,39,14,2,',');
   put([[3,38],[7,37],[20,39],[27,39],[52,37],[9,39]],'T');
 })();
 const SOLID=new Set(['T','h','~','#','R','B','W','D','C','K','S','b','L','M','O','Q','V']);
@@ -1410,7 +1420,8 @@ const BOSS={1:'darmo'};
 let npcs=[];
 function makeNPCs(){if(!STYLES.atik){STYLES.atik=Object.assign({},STYLES.ijah,{hij:R3('#f7d28a','#d9a84e','#a8743c'),top:R3('#c4e2f7','#7fbcf5','#2f7fd0'),bot:R3('#8fe0b0','#3fa46a','#2a7a4a')});STYLES.bayu=Object.assign({},STYLES.ucup,{hat:null,hair:HAIRS.brown,top:R3('#5a5478','#3a3550','#262238'),bot:R3('#d9dde8','#a8adbd','#7d8599')})}if(!STYLES.darmo)STYLES.darmo=Object.assign({},STYLES.petugas,{skin:SKIN.b,hair:HAIRS.grey,mus:true,hatC:R3('#e8685a','#a8372f','#75262a'),hatBand:P.au2,top:R3('#5a6fa8','#2d3a64','#1f2847'),bot:R3('#3a4368','#262d4a','#1a1f36')});npcs=[
   {id:'jali',x:6,y:20,dir:'left',sty:'jali',talk:talkJali},
-  {id:'satpam',x:28,y:26,dir:'down',sty:'satpam',talk:()=>say('PAK SATPAM: SELAMAT DATANG DI MONAS! MONAS MULAI DIBANGUN TAHUN 1961. COBA BACA PAPAN HIJAU DI DEPAN MONAS, ADA STEMPEL.')},
+  {id:'kerak',x:19,y:23,dir:'down',sty:'seller',talk:()=>say('ABANG KERAK TELOR: KERAK TELOR ITU MAKANAN KHAS BETAWI, DEK! DIBUAT DARI BERAS KETAN DAN TELUR, LALU DITABURI KELAPA SANGRAI DAN EBI. MASAKNYA DI ATAS ARANG.')},
+{id:'satpam',x:28,y:26,dir:'down',sty:'satpam',talk:()=>say('PAK SATPAM: SELAMAT DATANG DI MONAS! MONAS MULAI DIBANGUN TAHUN 1961. COBA BACA PAPAN HIJAU DI DEPAN MONAS, ADA STEMPEL.')},
   {id:'jaga1',x:27,y:6,dir:'down',sty:'jaga',talk:()=>say('PENJAGA: MAAF, ISTANA TIDAK BISA DIMASUKI SEMBARANGAN. LIHAT DARI LUAR PAGAR SAJA, YA. ADA PAPAN HIJAU YANG BISA KAMU BACA.')},
   {id:'jaga2',x:28,y:6,dir:'down',sty:'jaga',talk:()=>say('PENJAGA: LIHAT TIANG BENDERA DI HALAMAN ISTANA? BENDERA MERAH PUTIH BERKIBAR DI SANA SETIAP HARI.')},
   {id:'petugas',x:51,y:14,dir:'left',sty:'petugas',talk:talkPetugas},
@@ -1485,7 +1496,7 @@ function tileAction(x,y){const t=(map[y]||[])[x];{const lg=legendAt(x,y);if(lg)r
   if(t==='S'&&x===26&&y===26)return monasSign;
   if(t==='M')return inspectMonas;
   if(t==='O')return()=>say('INI ONDEL-ONDEL, BONEKA RAKSASA KHAS BETAWI. TINGGINYA SEKITAR 2,5 METER DAN RANGKANYA DARI BAMBU. ONDEL-ONDEL SELALU BERPASANGAN, LAKI-LAKI DAN PEREMPUAN.');
-  if(t==='Q')return()=>say('ABANG KERAK TELOR: KERAK TELOR ITU MAKANAN KHAS BETAWI, DEK! DIBUAT DARI BERAS KETAN DAN TELUR, LALU DITABURI KELAPA SANGRAI DAN EBI. MASAKNYA DI ATAS ARANG.');
+  if(t==='Q')return()=>say('GEROBAK PIKULAN KERAK TELOR. AJAK NGOBROL ABANG PENJUALNYA, YUK!');
   if(t==='V')return()=>say('KENDARAAN PARKIR. JAKARTA PUNYA BANYAK ANGKUTAN UMUM: BUS TRANSJAKARTA, KERETA, MRT, DAN BAJAJ BERODA TIGA.');
   if(x===25&&y===7)return async()=>{await say('INI ISTANA MERDEKA, TEMPAT PRESIDEN INDONESIA BEKERJA DAN MENERIMA TAMU NEGARA. SETIAP 17 AGUSTUS, DI HALAMANNYA ADA UPACARA BENDERA HARI KEMERDEKAAN.');await giveStamp('istana','ISTANA MERDEKA')};
   if(y===5&&(x===27||x===28))return()=>say('PINTU ISTANA. TERTUTUP RAPAT.');
@@ -1884,7 +1895,7 @@ async function panduan(){for(const s of['PANDUAN 1 DARI 5: JALAN DENGAN TOMBOL A
   'PANDUAN 5 DARI 5: TIM KAMU PULIH DI RUMAH ATAU KLINIK. BELANJA DI KOPDES. BUKA MENU UNTUK MELIHAT MISI, TAS, KODEKS, DAN MENYIMPAN PERMAINAN.'])await say(s)}
 async function toTitle(){if(!(await yesno('KEMBALI KE MENU UTAMA? PROGRES DISIMPAN DULU.')))return false;saveGame();await fadeOut();ui.length=0;scene='title';await fadeIn();title();return true}
 /* people of district 1 know the player by name; elsewhere there is a short introduction the first time */
-const NPCNAME={jali:'BANG JALI',satpam:'PAK SATPAM',jaga1:'PENJAGA',jaga2:'PENJAGA',petugas:'PETUGAS',engkong:'ENGKONG',guru:'BU GURU',bocah:'BOCAH',atik:'MPOK ATIK',bayu:'MAS BAYU',w1a:'KAKAK PELARI',w1b:'IBU',
+const NPCNAME={jali:'BANG JALI',kerak:'ABANG KERAK TELOR',satpam:'PAK SATPAM',jaga1:'PENJAGA',jaga2:'PENJAGA',petugas:'PETUGAS',engkong:'ENGKONG',guru:'BU GURU',bocah:'BOCAH',atik:'MPOK ATIK',bayu:'MAS BAYU',w1a:'KAKAK PELARI',w1b:'IBU',
   pemandu:'PEMANDU',dalang:'PAK DALANG',bocah2:'BOCAH',kokoh:'PAMAN',pemandu3:'PEMANDU',starling:'TUKANG ES',satpam3:'SATPAM',turis:'IBU'};
 async function sapa(n){if(!n||!n.id||n.id==='patung'||flags['sapa_'+n.id]||!flags.starter)return;flags['sapa_'+n.id]=1;
   const T=TRAINERS[n.trainer||n.boss],S=T?T.name:n.heal?n.heal.name:NPCNAME[n.id]||'WARGA',N=pname();
@@ -2796,7 +2807,8 @@ function heroStyles(){if(STYLES.heroL)return;const IND='#2b3a6e',INDL='#5a6fb0',
     acc(s,b){for(let x=2;x<=21;x++){const top=headTop(x)-1;if(top>5)continue;r(HAT[1],x,top,1,6-top);if(x>=16)r(HAT[2],x,top,1,6-top)}r(HAT[0],6,2,5,1);r(HAT[0],5,3,2,2);
       r('#d8342a',3,4,18,2);r('#f08a70',4,4,7,1);r(HAT[2],s?1:0,6,s?23:24,2);r(HAT[1],s?2:1,6,s?21:22,1);r(HAT[0],4,6,8,1);
       if(b){r('#d8342a',10,8,4,2);r('#ffffff',11,8,2,1)}}}}
-function applyHero(){heroStyles();const k=STYLES[flags.hero]?flags.hero:'heroA';if(STYLES.player===STYLES[k])return;STYLES.player=STYLES[k];for(const q in PC)if(q.startsWith('player'))delete PC[q];if(typeof PORT!=='undefined')for(const q in PORT)if(q.startsWith('player'))delete PORT[q]}
+/* saves from before the hero choice have no flags.hero: give them the new design (by gender when known) instead of the old heroA look */
+function applyHero(){heroStyles();if(!STYLES[flags.hero])flags.hero=flags.gender==='P'?'heroP':'heroL';const k=flags.hero;if(STYLES.player===STYLES[k])return;STYLES.player=STYLES[k];for(const q in PC)if(q.startsWith('player'))delete PC[q];if(typeof PORT!=='undefined')for(const q in PORT)if(q.startsWith('player'))delete PORT[q]}
 /* the choice is a question in the story. The two designs stand behind the canvas as real pictures (sharp at the
    screen's own resolution, like the title picture); the canvas on top only draws the text and the menu */
 let HSTG=null,HSEL=-1,HSTG_ON=false;
@@ -2840,14 +2852,15 @@ function titleLogo(on,f,off,bob){const im=LIMG.kelana;if(!on){if(TLOGO)im.style.
 /* shown once per start of the app, before the title menu appears */
 async function splash(){if(SPLASHED)return;SPLASHED=true;
   try{if(!document.getElementById('fontMont')){const l=document.createElement('link');l.id='fontMont';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap';document.head.appendChild(l)}}catch(e){}
-  const d=document.createElement('div'),im=LIMG.naya,t=document.createElement('div'),place=()=>{t.style.fontSize=Math.max(12,Math.round(innerHeight*.052))+'px'};cv.parentNode.style.position='relative';
+  const d=document.createElement('div'),im=LIMG.naya,t=document.createElement('div'),place=()=>{t.style.fontSize=Math.max(12,Math.round(Math.min(innerHeight*.04,innerWidth*.048)))+'px'};cv.parentNode.style.position='relative';
   const c=document.createElement('div');d.id='splash';d.style.cssText='position:fixed;inset:0;z-index:9998;pointer-events:none;background:#ffffff;display:flex;align-items:center;justify-content:center;transition:opacity .7s ease';
-  c.style.cssText='height:100%;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5%;opacity:0;transform:scale(.96);transition:opacity .7s ease,transform 1.2s ease';
-  im.alt='Naya Studio';im.style.cssText='height:26%;width:auto';t.textContent='Naya Studio Production';t.style.cssText='font:600 14px Montserrat,Arial,sans-serif;color:#000000;letter-spacing:.03em';
+  c.style.cssText='height:100%;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5%;opacity:0;transform:scale(.96);transition:opacity .7s ease,transform .9s ease';
+  im.alt='Naya Studio';im.style.cssText='height:min(18vh,26vw);width:auto';t.textContent='Naya Studio Production';t.style.cssText='font:600 14px Montserrat,Arial,sans-serif;color:#000000;letter-spacing:.03em;white-space:nowrap';
   c.appendChild(im);c.appendChild(t);d.appendChild(c);document.body.appendChild(d);{const bc=document.getElementById('bootcover');if(bc)bc.remove()}
   /* logo fades in, stays, fades out, then the white page fades into the title screen */
   place();await wait(2);c.style.opacity='1';c.style.transform='scale(1)';
-  for(let i=0;i<140;i++){place();await wait(1)}c.style.opacity='0';await wait(40);d.style.opacity='0';await wait(44);d.remove()}
+  for(let i=0;i<140;i++){place();await wait(1)}/* shrink a little while fading, then the white page fades into the title */
+  c.style.transition='opacity .8s ease,transform .8s ease';c.style.transform='scale(.8)';c.style.opacity='0';await wait(48);d.style.opacity='0';await wait(44);d.remove()}
 /* the title menu hangs under the logo, so it never covers the heroes or their monsters */
 function titleMenuX(){const iw=KV.naturalWidth||2688,ih=KV.naturalHeight||1152,vw=Math.min(iw,SCW*ih/SCH),off=(iw-vw)*.21/iw,cx=Math.max(.5,Math.min(.72,(.53-off)/(vw/iw)));
   return Math.round(Math.max(2-UX,Math.min(SCW-UX-100,cx*SCW-UX-48)))}
@@ -2905,7 +2918,7 @@ function slotPick(mode){return new Promise(res=>{const D=[0,1,2].map(slotData);l
     if(!d){txt('PROFIL KOSONG',46,y+10,3);txt(mode==='new'?'MULAI PETUALANGAN BARU DI SINI':'BELUM ADA PERMAINAN',46,y+21,3);if(off){g.fillStyle='rgba(251,241,216,.5)';g.fillRect(40,y+4,190,30)};return}
     const f=d.flags||{},nama=f.nama||'KELANA',t=Math.floor((f.time||0)/60),jam=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`,lv=(d.party||[]).reduce((m,c)=>Math.max(m,c.lv||0),0),
       st=Object.keys(d.stamps||{}).length,mon=Object.keys(d.caught||{}).length,dist=Object.keys(f).filter(q=>/^done\d$/.test(q)&&f[q]).length;
-    const hk=STYLES[f.hero]?f.hero:'heroA';g.imageSmoothingEnabled=false;g.drawImage(personSprite({dir:'down',moving:sel,prog:(frame>>3)%2?12:0,step:frame>>4},hk),204,y-6);
+    heroStyles();const hk=STYLES[f.hero]?f.hero:(f.gender==='P'?'heroP':'heroL');g.imageSmoothingEnabled=false;g.drawImage(personSprite({dir:'down',moving:sel,prog:(frame>>3)%2?12:0,step:frame>>4},hk),204,y-6);
     txt(nama,46,y+5,3);txt('WAKTU '+jam,118,y+5,3);
     txt(`DISTRIK ${Math.min(8,dist+1)}   LV ${lv}`,46,y+16,3);txt(`STEMPEL ${st}   MONSTER ${mon}`,46,y+27,3);
     if(f.beat_juara){g.fillStyle='#d9a23a';g.fillRect(14,y+24,18,9);txt('*',20,y+25,0)}};
@@ -3458,7 +3471,7 @@ function buildArt(){
   mkS('fv',8,14,4,13,()=>{r(P.ol,2,0,4,14);r(P.wall1,3,1,2,12);r(P.wall2,4,1,1,12)});
   for(const f of[0,2])mkS('monas'+f,120,146,60,134,x=>{x.translate(-68,2);monas(f)});
   mkS('ondel',46,58,23,52,()=>{ondel(4,6,false,0);ondel(24,7,true,0)});
-  mkS('kerak',76,48,30,45,x=>{const sp=personSprite({dir:'down',moving:false,prog:0,step:0},'seller');ctx=x;x.drawImage(sp,51,16,19,28);kerakTelor(4,16,0)});
+  mkS('kerak',32,30,16,27,x=>{ctx=x;kerakCart(1,3)});
   mkS('taxi',50,28,24,24,()=>car(2,6,{B:P.blue1,b:'#5aa3e6',D:P.blue2,taxi:true}));
   mkS('bajaj',44,28,18,24,()=>bajaj(3,3,1));mkS('motor',30,24,13,21,()=>motor(2,3));
   mkS('pigeon0',14,12,6,10,()=>pigeon(1,1,0,3));mkS('pigeon1',14,12,6,10,()=>pigeon(1,1,0,0));
@@ -3470,7 +3483,7 @@ function buildStatic(){
     if(t==='T'&&deepForest(x,y)){}else if(t==='T')STATIC.push({x:cx,y:by,s:'tree'+((x*7+y*3)%3)});else if(t==='h')STATIC.push({x:cx,y:by,s:'bush'});else if(t==='L')STATIC.push({x:cx,y:by,s:'lamp'});
     else if(t==='b')STATIC.push({x:cx,y:by,s:'bench'});else if(t==='S')STATIC.push({x:cx,y:by,s:'sign'});else if(t==='#')STATIC.push({x:cx,y:y*TS+12,s:KEYS[y][x]==='fv'?'fv':'fh'})}
   BUILD.forEach((b,i)=>STATIC.push(b.kind==='warung'?{x:(b.x+b.w/2)*TS,y:(b.y+b.h)*TS-1,s:'b'+i}:{x:(b.x+b.w/2)*TS,y:(b.y+b.h)*TS-1,box:b}));
-  STATIC.push({x:448,y:399,s:'monas'},{x:31*TS,y:27*TS-2,s:'ondel'},{x:18.5*TS,y:24*TS-2,s:'kerak'},{x:11.5*TS,y:38*TS-3,s:'motor'},
+  STATIC.push({x:448,y:399,s:'monas'},{x:31*TS,y:27*TS-2,s:'ondel'},{x:18*TS,y:24*TS-2,s:'kerak'},{x:11.5*TS,y:38*TS-3,s:'motor'},
     {x:26*TS+2,y:27*TS+10,s:'pigeon',ph:0},{x:29*TS+6,y:28*TS+4,s:'pigeon',ph:1},{x:25*TS,y:28*TS+8,s:'pigeon',ph:0},{x:36*TS,y:22*TS+10,s:'pigeon',ph:1},{x:19*TS+6,y:38*TS+12,s:'cat'},{x:5*TS,y:21*TS+12,s:'cat'});
   STATIC.sort((a,b)=>a.y-b.y)}
 
